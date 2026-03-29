@@ -10,6 +10,9 @@
       <el-tab-pane label="课程数量" name="courseCount">
         <CourseCountReport ref="courseCountRef" :start-date="startDate" :end-date="endDate" />
       </el-tab-pane>
+      <el-tab-pane label="教室使用情况" name="classroomUsage">
+        <ClassroomUsageReport ref="classroomUsageRef" :start-date="startDate" :end-date="endDate" />
+      </el-tab-pane>
     </el-tabs>
     <el-date-picker
       :clearable="false"
@@ -28,6 +31,7 @@ import { ref, onMounted, nextTick } from 'vue'
 import dayjs from 'dayjs'
 import TeacherCourseCountReport from '@/views/report/TeacherCourseCountReport.vue'
 import CourseCountReport from '@/views/report/CourseCountReport.vue'
+import ClassroomUsageReport from '@/views/report/ClassroomUsageReport.vue'
 
 const currentTab = ref('teacherCourseCount')
 const dates = ref<[Date, Date]>([
@@ -38,6 +42,7 @@ const startDate = ref(dayjs().startOf('month').format('YYYY-MM-DD'))
 const endDate = ref(dayjs().endOf('month').format('YYYY-MM-DD'))
 const teacherCourseCountRef = ref<InstanceType<typeof TeacherCourseCountReport>>()
 const courseCountRef = ref<InstanceType<typeof CourseCountReport>>()
+const classroomUsageRef = ref<InstanceType<typeof ClassroomUsageReport>>()
 
 const shortcuts = [
   {
@@ -73,6 +78,7 @@ onMounted(() => {
   nextTick(() => {
     teacherCourseCountRef.value?.search()
     courseCountRef.value?.search()
+    classroomUsageRef.value?.search()
   })
 })
 </script>

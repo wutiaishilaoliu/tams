@@ -69,3 +69,11 @@ export const removeCourseSchedulingByIdList = (idList: number[]) => {
         data: idList
     })
 }
+
+export const autoSchedule = (data: any) => {
+    return axios({
+        url: 'course-scheduling/auto',
+        method: 'post',
+        data
+    })
+}

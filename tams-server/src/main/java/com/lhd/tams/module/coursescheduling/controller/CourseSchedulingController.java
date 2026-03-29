@@ -3,9 +3,12 @@ package com.lhd.tams.module.coursescheduling.controller;
 import cn.hutool.core.util.StrUtil;
 import com.lhd.tams.common.base.BaseController;
 import com.lhd.tams.common.model.ApiResult;
+import com.lhd.tams.module.auth.util.JwtUtils;
 import com.lhd.tams.module.coursescheduling.manager.CourseSchedulingExcelManager;
 import com.lhd.tams.module.coursescheduling.model.dto.*;
 import com.lhd.tams.module.coursescheduling.model.vo.CourseSchedulingListVO;
+import com.lhd.tams.module.coursescheduling.model.vo.StudentScheduleVO;
+import com.lhd.tams.module.coursescheduling.model.vo.TeacherScheduleVO;
 import com.lhd.tams.module.coursescheduling.service.CourseSchedulingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -101,6 +104,15 @@ public class CourseSchedulingController extends BaseController {
         return success();
     }
 
+    @Operation(summary = "自动排课（贪心算法）")
+    @PostMapping("auto")
+    public ResponseEntity<ApiResult<?>> autoSchedule(@Validated @RequestBody AutoScheduleDTO dto) {
+
+        courseSchedulingService.autoSchedule(dto);
+
+        return success();
+    }
+
     @Operation(summary = "导出excel")
     @GetMapping("export/excel")
     public void exportExcel(HttpServletResponse response, @Validated CourseSchedulingExportDTO dto) throws IOException {
@@ -116,5 +128,45 @@ public class CourseSchedulingController extends BaseController {
         response.flushBuffer();
 
         workbook.close();
+    }
+
+    @Operation(summary = "教师课表")
+    @GetMapping("teacher/my")
+    public ResponseEntity<ApiResult<List<TeacherScheduleVO>>> getTeacherSchedule(
+            @RequestHeader("Authorization") String authorization,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+
+        String token = authorization;
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        if (!JwtUtils.validateToken(token)) {
+            return ResponseEntity.status(401).build();
+        }
+
+        Long teacherId = JwtUtils.getUserIdFromToken(token);
+        return success(courseSchedulingService.getTeacherSchedule(teacherId, startDate, endDate));
+    }
+
+    @Operation(summary = "学生课表")
+    @GetMapping("student/my")
+    public ResponseEntity<ApiResult<List<StudentScheduleVO>>> getStudentSchedule(
+            @RequestHeader("Authorization") String authorization,
+            @RequestParam Long classId,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+
+        String token = authorization;
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        if (!JwtUtils.validateToken(token)) {
+            return ResponseEntity.status(401).build();
+        }
+
+        return success(courseSchedulingService.getStudentSchedule(classId, startDate, endDate));
     }
 }

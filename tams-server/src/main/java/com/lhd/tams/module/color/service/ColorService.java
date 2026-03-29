@@ -1,5 +1,7 @@
 package com.lhd.tams.module.color.service;
 
+import com.lhd.tams.module.color.model.vo.ColorListVO;
+
 import java.util.List;
 
 /**
@@ -11,5 +13,5 @@ public interface ColorService {
      * 列表
      * @return
      */
-    List<String> getEffectiveList();
+    List<ColorListVO> getEffectiveList();
 }

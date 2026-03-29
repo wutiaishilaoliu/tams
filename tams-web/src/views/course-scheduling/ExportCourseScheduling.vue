@@ -70,7 +70,11 @@ const close = () => { resetData(); emit('on-close'); dialogVisible.value = false
 const submit = () => {
   formRef.value?.validate((valid) => {
     if (valid) {
-      const baseUrl = (import.meta.env.VITE_API_BASE_URL as string || '').replace(/\/$/, '')
+      submitBtnLoading.value = true
+      let baseUrl = (import.meta.env.VITE_API_BASE_URL as string || '').replace(/\/$/, '')
+      if (!baseUrl) {
+        baseUrl = window.location.origin
+      }
       let url = baseUrl + '/course-scheduling/export/excel'
         + '?startDate=' + dayjs(form.value.dates[0]).format('YYYY-MM-DD')
         + '&endDate=' + dayjs(form.value.dates[1]).format('YYYY-MM-DD')
@@ -79,12 +83,13 @@ const submit = () => {
 
       if (currentClassroom.value && currentClassroom.value.id) {
         url += '&classroomId=' + currentClassroom.value.id
-        url += '&classroomName=' + currentClassroom.value.name
+        url += '&classroomName=' + encodeURIComponent(currentClassroom.value.name)
       }
-      if (form.value.title) url += '&title=' + form.value.title
-      if (form.value.filename) url += '&filename=' + form.value.filename
+      if (form.value.title) url += '&title=' + encodeURIComponent(form.value.title)
+      if (form.value.filename) url += '&filename=' + encodeURIComponent(form.value.filename)
 
       window.location.href = url
+      submitBtnLoading.value = false
       emit('on-success')
       dialogVisible.value = false
       resetData()

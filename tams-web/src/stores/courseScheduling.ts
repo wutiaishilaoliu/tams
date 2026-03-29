@@ -47,6 +47,11 @@ export const useCourseSchedulingStore = defineStore('courseScheduling', () => {
         return res.data
     }
 
+    const autoSchedule = async (data: any) => {
+        const res: any = await Api.autoSchedule(data)
+        return res.data
+    }
+
     return {
         getCourseSchedulingList,
         getCourseSchedulingById,
@@ -56,6 +61,7 @@ export const useCourseSchedulingStore = defineStore('courseScheduling', () => {
         updateCourseSchedulingById,
         updateCourseSchedulingTimeById,
         removeCourseSchedulingById,
-        removeCourseSchedulingByIdList
+        removeCourseSchedulingByIdList,
+        autoSchedule
     }
 })

@@ -20,19 +20,21 @@
       <el-col :span="6" style="text-align: right;">
         <el-button type="primary" size="small" @click="saveCourseSchedulingVisible = true">新增</el-button>
         <el-button type="primary" size="small" @click="batchSaveCourseSchedulingVisible = true">批量新增</el-button>
+        <el-button type="warning" size="small" @click="autoScheduleVisible = true">智能排课</el-button>
         <el-button type="success" size="small" @click="exportCourseSchedulingVisible = true">导出</el-button>
       </el-col>
     </el-row>
     <FullCalendar ref="calendarRef" :options="calendarOptions" />
     <SaveCourseScheduling :visible="saveCourseSchedulingVisible" :date="currentDate" :classroomId="currentClassroomId" @on-close="saveCourseSchedulingVisible = false" @on-success="saveSuccess" />
     <BatchSaveCourseScheduling :visible="batchSaveCourseSchedulingVisible" @on-close="batchSaveCourseSchedulingVisible = false" @on-success="batchSaveSuccess" />
+    <AutoScheduleCourseScheduling :visible="autoScheduleVisible" @on-close="autoScheduleVisible = false" @on-success="autoScheduleSuccess" />
     <ExportCourseScheduling :visible="exportCourseSchedulingVisible" @on-close="exportCourseSchedulingVisible = false" @on-success="exportCourseSchedulingVisible = false" />
     <ViewCourseScheduling :visible="viewCourseSchedulingVisible" :id="currentId" @on-close="viewCourseSchedulingVisible = false" @on-success="viewSuccess" />
   </el-card>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -45,6 +47,7 @@ import { useTeacherStore } from '@/stores/teacher'
 import { useCourseSchedulingStore } from '@/stores/courseScheduling'
 import SaveCourseScheduling from '@/views/course-scheduling/SaveCourseScheduling.vue'
 import BatchSaveCourseScheduling from '@/views/course-scheduling/BatchSaveCourseScheduling.vue'
+import AutoScheduleCourseScheduling from '@/views/course-scheduling/AutoScheduleCourseScheduling.vue'
 import ExportCourseScheduling from '@/views/course-scheduling/ExportCourseScheduling.vue'
 import ViewCourseScheduling from '@/views/course-scheduling/ViewCourseScheduling.vue'
 
@@ -63,6 +66,7 @@ const saveCourseSchedulingVisible = ref(false)
 const batchSaveCourseSchedulingVisible = ref(false)
 const exportCourseSchedulingVisible = ref(false)
 const viewCourseSchedulingVisible = ref(false)
+const autoScheduleVisible = ref(false)
 const currentDate = ref('')
 const currentClassroomId = ref<number | string>('')
 const currentId = ref<number | string>('')
@@ -163,6 +167,7 @@ const init = () => {
 const saveSuccess = () => { search(); saveCourseSchedulingVisible.value = false }
 const batchSaveSuccess = () => { search(); batchSaveCourseSchedulingVisible.value = false }
 const viewSuccess = () => { search(); viewCourseSchedulingVisible.value = false }
+const autoScheduleSuccess = () => { search(); autoScheduleVisible.value = false }
 
 onMounted(() => { init() })
 </script>

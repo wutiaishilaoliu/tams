@@ -2,6 +2,7 @@ package com.lhd.tams.module.report.controller;
 
 import com.lhd.tams.common.base.BaseController;
 import com.lhd.tams.common.model.ApiResult;
+import com.lhd.tams.module.coursescheduling.model.vo.ClassroomUsageReportVO;
 import com.lhd.tams.module.coursescheduling.model.vo.CourseSchedulingReportVO;
 import com.lhd.tams.module.coursescheduling.service.CourseSchedulingService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,5 +41,13 @@ public class ReportController extends BaseController {
                                                                                           @RequestParam("endDate") String endDate) {
 
         return success(courseSchedulingService.getReportCourseCount(startDate, endDate));
+    }
+
+    @Operation(summary = "教室使用情况")
+    @GetMapping("classroom/usage")
+    public ResponseEntity<ApiResult<List<ClassroomUsageReportVO>>> getReportClassroomUsage(@RequestParam("startDate") String startDate,
+                                                                                           @RequestParam("endDate") String endDate) {
+
+        return success(courseSchedulingService.getReportClassroomUsage(startDate, endDate));
     }
 }

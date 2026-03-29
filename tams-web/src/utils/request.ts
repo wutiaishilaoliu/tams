@@ -9,6 +9,17 @@ const service = axios.create({
     timeout: 30000
 })
 
+// 请求拦截器
+service.interceptors.request.use(config => {
+    const token = localStorage.getItem('token')
+    if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`
+    }
+    return config
+}, error => {
+    return Promise.reject(error)
+})
+
 const err = (error: any) => {
     if (error.response) {
         const data = error.response.data

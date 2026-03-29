@@ -80,11 +80,20 @@ public class CourseSchedulingExcelManager {
         // 时间map <第几周, timeList>
         Map<Integer, List<String>> timeMap = new HashMap<>(16);
         for (Map.Entry<Integer, List<LocalDate>> entry : dateMap.entrySet()) {
-            timeMap.put(entry.getKey(), courseSchedulingMapper.selectTimePeriodByDateRange(entry.getValue(), dto.getClassroomId()));
+            timeMap.put(entry.getKey(), courseSchedulingMapper.selectTimePeriodByDateRange(
+                    entry.getValue(),
+                    dto.getClassroomId(),
+                    dto.getTeacherId(),
+                    dto.getClassId()));
         }
 
         // 课程map <date+time, course>
-        List<CourseSchedulingExportVO> voList = courseSchedulingMapper.selectByDateRange(startDate, endDate, dto.getClassroomId());
+        List<CourseSchedulingExportVO> voList = courseSchedulingMapper.selectByDateRange(
+                startDate,
+                endDate,
+                dto.getClassroomId(),
+                dto.getTeacherId(),
+                dto.getClassId());
         Map<String, CourseSchedulingExportVO> dataMap = new HashMap<>(16);
         for (CourseSchedulingExportVO vo : voList) {
             dataMap.put(vo.getDate() + vo.getTime(), vo);

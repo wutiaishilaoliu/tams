@@ -5,24 +5,33 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lhd.tams.common.consts.ErrorCodeEnum;
 import com.lhd.tams.common.exception.BusinessException;
+import com.lhd.tams.module.coursescheduling.dao.CourseSchedulingClassMapper;
 import com.lhd.tams.module.coursescheduling.dao.CourseSchedulingMapper;
 import com.lhd.tams.module.coursescheduling.model.convert.AbstractCourseSchedulingConverter;
+import com.lhd.tams.module.coursescheduling.model.data.CourseSchedulingClassDO;
 import com.lhd.tams.module.coursescheduling.model.data.CourseSchedulingDO;
+import com.lhd.tams.module.coursescheduling.model.dto.AutoScheduleCourseDTO;
+import com.lhd.tams.module.coursescheduling.model.dto.AutoScheduleDTO;
 import com.lhd.tams.module.coursescheduling.model.dto.CourseSchedulingBatchSaveDTO;
 import com.lhd.tams.module.coursescheduling.model.dto.CourseSchedulingQuery;
 import com.lhd.tams.module.coursescheduling.model.dto.CourseSchedulingSaveDTO;
 import com.lhd.tams.module.coursescheduling.model.dto.CourseSchedulingTimeUpdateDTO;
+import com.lhd.tams.module.coursescheduling.model.vo.ClassroomUsageReportVO;
 import com.lhd.tams.module.coursescheduling.model.vo.CourseSchedulingListVO;
 import com.lhd.tams.module.coursescheduling.model.vo.CourseSchedulingReportVO;
+import com.lhd.tams.module.coursescheduling.model.vo.StudentScheduleVO;
+import com.lhd.tams.module.coursescheduling.model.vo.TeacherScheduleVO;
 import com.lhd.tams.module.coursescheduling.service.CourseSchedulingService;
 import lombok.extern.slf4j.Slf4j;
 import cn.hutool.core.util.StrUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author lhd
@@ -84,13 +93,61 @@ public class CourseSchedulingServiceImpl extends ServiceImpl<CourseSchedulingMap
     }
 
     @Override
+    public List<ClassroomUsageReportVO> getReportClassroomUsage(String startDate, String endDate) {
+
+        List<ClassroomUsageReportVO> list = baseMapper.selectReportClassroomUsage(startDate, endDate);
+        if (list == null || list.isEmpty()) {
+            return list;
+        }
+
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+        long totalDays = 0;
+        LocalDate tmp = start;
+        while (!tmp.isAfter(end)) {
+            totalDays++;
+            tmp = tmp.plusDays(1);
+        }
+        if (totalDays <= 0) {
+            totalDays = 1;
+        }
+
+        for (ClassroomUsageReportVO vo : list) {
+            int occupiedDays = vo.getOccupiedDays() == null ? 0 : vo.getOccupiedDays();
+            double rate = occupiedDays * 100.0 / totalDays;
+            double idle = 100.0 - rate;
+            vo.setOccupancyRate(Math.round(rate * 100.0) / 100.0);
+            vo.setIdleRate(Math.round(idle * 100.0) / 100.0);
+        }
+
+        return list;
+    }
+
+    @Autowired
+    private CourseSchedulingClassMapper classMapper;
+
+    @Override
     public boolean saveCourseScheduling(CourseSchedulingSaveDTO saveDTO) {
 
         check(null, saveDTO.getClassroomId(), saveDTO.getTeacherId(), saveDTO.getDate(), saveDTO.getAttendTime(), saveDTO.getFinishTime());
 
         CourseSchedulingDO dataObj = AbstractCourseSchedulingConverter.INSTANCE.saveDto2DO(saveDTO);
-
-        return save(dataObj);
+        boolean saved = save(dataObj);
+        
+        if (saved && dataObj.getId() != null && saveDTO.getClassIdList() != null && !saveDTO.getClassIdList().isEmpty()) {
+            // 保存班级关联关系
+            List<CourseSchedulingClassDO> classList = saveDTO.getClassIdList().stream()
+                    .map(classId -> {
+                        CourseSchedulingClassDO classDO = new CourseSchedulingClassDO();
+                        classDO.setCourseSchedulingId(dataObj.getId());
+                        classDO.setClassId(classId);
+                        return classDO;
+                    })
+                    .collect(Collectors.toList());
+            classMapper.insertBatch(classList);
+        }
+        
+        return saved;
     }
 
     @Override
@@ -176,6 +233,98 @@ public class CourseSchedulingServiceImpl extends ServiceImpl<CourseSchedulingMap
                 .in(CourseSchedulingDO::getId, idList));
     }
 
+    @Override
+    public boolean autoSchedule(AutoScheduleDTO dto) {
+
+        List<AutoScheduleCourseDTO> requestList = dto.getRequestList();
+        if (requestList == null || requestList.isEmpty()) {
+            return true;
+        }
+
+        requestList.sort(Comparator
+                .comparing((AutoScheduleCourseDTO r) -> r.getPriority() == null ? 0 : r.getPriority())
+                .reversed());
+
+        List<CourseSchedulingDO> toSaveList = new ArrayList<>();
+        List<AutoScheduleCourseDTO> failList = new ArrayList<>();
+
+        for (AutoScheduleCourseDTO req : requestList) {
+            int scheduled = 0;
+
+            List<LocalDate> dateList = new ArrayList<>();
+            LocalDate date = req.getStartDate();
+            while (!date.isAfter(req.getEndDate())) {
+                if (req.getWeekList().contains(date.getDayOfWeek().getValue())) {
+                    dateList.add(date);
+                }
+                date = date.plusDays(1);
+            }
+
+            outer:
+            for (LocalDate d : dateList) {
+                for (Long classroomId : req.getClassroomIdList()) {
+
+                    CourseSchedulingSaveDTO trial = new CourseSchedulingSaveDTO();
+                    trial.setClassroomId(classroomId);
+                    trial.setCourseId(req.getCourseId());
+                    trial.setTeacherId(req.getTeacherId());
+                    trial.setDate(d);
+                    trial.setAttendTime(req.getAttendTime());
+                    trial.setFinishTime(req.getFinishTime());
+
+                    try {
+                        check(null,
+                                trial.getClassroomId(),
+                                trial.getTeacherId(),
+                                trial.getDate(),
+                                trial.getAttendTime(),
+                                trial.getFinishTime());
+                    } catch (BusinessException e) {
+                        continue;
+                    }
+
+                    CourseSchedulingDO dataObj = AbstractCourseSchedulingConverter.INSTANCE.saveDto2DO(trial);
+                    dataObj.setClassIdList(req.getClassIdList()); // 保存班级关联
+                    toSaveList.add(dataObj);
+                    scheduled++;
+
+                    if (scheduled >= req.getLessonCount()) {
+                        break outer;
+                    }
+                }
+            }
+
+            if (scheduled < req.getLessonCount()) {
+                failList.add(req);
+            }
+        }
+
+        // 逐条保存，以便获得ID后保存班级关联
+        for (CourseSchedulingDO dataObj : toSaveList) {
+            List<Long> classIdList = dataObj.getClassIdList();
+            dataObj.setClassIdList(null); // 清空临时字段
+            save(dataObj);
+            
+            if (dataObj.getId() != null && classIdList != null && !classIdList.isEmpty()) {
+                List<CourseSchedulingClassDO> classDOList = classIdList.stream()
+                        .map(classId -> {
+                            CourseSchedulingClassDO classDO = new CourseSchedulingClassDO();
+                            classDO.setCourseSchedulingId(dataObj.getId());
+                            classDO.setClassId(classId);
+                            return classDO;
+                        })
+                        .collect(Collectors.toList());
+                classMapper.insertBatch(classDOList);
+            }
+        }
+
+        if (!failList.isEmpty()) {
+            throw new BusinessException("该时间段或者教室已排课");
+        }
+
+        return true;
+    }
+
     private void check(Long id, Long classroomId, Long teacherId, LocalDate date, LocalTime attendTime, LocalTime finishTime) {
 
         List<CourseSchedulingListVO> classroomVoList = baseMapper.selectCourseSchedulingList(Wrappers.<CourseSchedulingDO>query()
@@ -231,5 +380,50 @@ public class CourseSchedulingServiceImpl extends ServiceImpl<CourseSchedulingMap
                 || isBetween(attendTime2, attendTime1, finishTime1)
                 || isBetween(finishTime2, attendTime1, finishTime1)
                 || (attendTime1.equals(attendTime2) && finishTime1.equals(finishTime2));
+    }
+
+    @Override
+    public List<TeacherScheduleVO> getTeacherSchedule(Long teacherId, String startDate, String endDate) {
+
+        CourseSchedulingQuery query = new CourseSchedulingQuery();
+        query.setTeacherIdList(Collections.singletonList(teacherId));
+        query.setStartDate(startDate);
+        query.setEndDate(endDate);
+
+        List<CourseSchedulingListVO> list = listCourseScheduling(query);
+
+        return list.stream().map(vo -> {
+            TeacherScheduleVO scheduleVO = new TeacherScheduleVO();
+            scheduleVO.setId(vo.getId());
+            scheduleVO.setCourseName(vo.getCourseName());
+            scheduleVO.setClassroomName(vo.getClassroomName());
+            scheduleVO.setClassName(""); // 需要关联班级表
+            scheduleVO.setStudentCount(0); // 需要统计学生数量
+            scheduleVO.setDate(vo.getDate());
+            scheduleVO.setAttendTime(vo.getAttendTime() != null ? vo.getAttendTime().toString() : null);
+            scheduleVO.setFinishTime(vo.getFinishTime() != null ? vo.getFinishTime().toString() : null);
+            scheduleVO.setBackgroundColor(vo.getBackgroundColor());
+            return scheduleVO;
+        }).toList();
+    }
+
+    @Override
+    public List<StudentScheduleVO> getStudentSchedule(Long classId, String startDate, String endDate) {
+
+        // 查询该班级关联的排课（通过t_course_scheduling_class关联表）
+        List<CourseSchedulingListVO> list = baseMapper.selectCourseSchedulingListByClassId(classId, startDate, endDate);
+
+        return list.stream().map(vo -> {
+            StudentScheduleVO scheduleVO = new StudentScheduleVO();
+            scheduleVO.setId(vo.getId());
+            scheduleVO.setCourseName(vo.getCourseName());
+            scheduleVO.setClassroomName(vo.getClassroomName());
+            scheduleVO.setTeacherName(vo.getTeacherName());
+            scheduleVO.setDate(vo.getDate());
+            scheduleVO.setAttendTime(vo.getAttendTime() != null ? vo.getAttendTime().toString() : null);
+            scheduleVO.setFinishTime(vo.getFinishTime() != null ? vo.getFinishTime().toString() : null);
+            scheduleVO.setBackgroundColor(vo.getBackgroundColor());
+            return scheduleVO;
+        }).toList();
     }
 }

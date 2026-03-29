@@ -21,6 +21,16 @@ public class TeacherDO {
     private String name;
 
     /**
+     * 登录账号
+     */
+    private String username;
+
+    /**
+     * 登录密码
+     */
+    private String password;
+
+    /**
      * 停启用状态
      */
     private Integer enableState;

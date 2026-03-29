@@ -1,5 +1,7 @@
 package com.lhd.tams.module.teacher.service.impl;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.digest.BCrypt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -65,6 +67,10 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, TeacherDO> im
     public boolean saveTeacher(TeacherSaveDTO saveDTO) {
 
         TeacherDO dataObj = AbstractTeacherConverter.INSTANCE.saveDto2DO(saveDTO);
+        
+        // 设置密码，默认为123456
+        String password = StrUtil.isBlank(saveDTO.getPassword()) ? "123456" : saveDTO.getPassword();
+        dataObj.setPassword(BCrypt.hashpw(password));
 
         return save(dataObj);
     }
@@ -72,8 +78,16 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, TeacherDO> im
     @Override
     public boolean updateTeacherById(Long id, TeacherSaveDTO saveDTO) {
 
+        TeacherDO existTeacher = getById(id);
+        if (existTeacher == null) {
+            return false;
+        }
+
         TeacherDO dataObj = AbstractTeacherConverter.INSTANCE.saveDto2DO(saveDTO);
         dataObj.setId(id);
+        if (StrUtil.isNotBlank(saveDTO.getPassword())) {
+            dataObj.setPassword(BCrypt.hashpw(saveDTO.getPassword()));
+        }
 
         return updateById(dataObj);
     }
@@ -86,5 +100,25 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, TeacherDO> im
         dataObj.setEnableState(enableState);
 
         return updateById(dataObj);
+    }
+
+    @Override
+    public TeacherListVO getTeacherByUsername(String username) {
+
+        LambdaQueryWrapper<TeacherDO> queryWrapper = Wrappers.<TeacherDO>lambdaQuery()
+                .eq(TeacherDO::getUsername, username);
+
+        TeacherDO teacherDO = getOne(queryWrapper);
+        if (teacherDO == null) {
+            return null;
+        }
+
+        TeacherListVO vo = new TeacherListVO();
+        vo.setId(teacherDO.getId());
+        vo.setName(teacherDO.getName());
+        vo.setUsername(teacherDO.getUsername());
+        vo.setPassword(teacherDO.getPassword());
+        vo.setEnableState(teacherDO.getEnableState());
+        return vo;
     }
 }

@@ -1,11 +1,13 @@
 package com.lhd.tams.module.coursescheduling.model.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 /**
  * @author lhd
@@ -37,4 +39,8 @@ public class CourseSchedulingSaveDTO {
     @NotNull
     @Schema(description = "下课时间")
     private LocalTime finishTime;
+
+    @NotEmpty
+    @Schema(description = "班级id列表")
+    private List<Long> classIdList;
 }

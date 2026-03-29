@@ -21,7 +21,10 @@ body {
 
 /* 重写 Element Plus 样式 */
 .el-card__header {
-  padding: 9px 10px;
+  padding: 9px 14px;
+  background: linear-gradient(90deg, #409eff 0%, #66b1ff 50%, #a0cfff 100%);
+  color: #fff;
+  font-weight: 600;
 }
 
 .el-table td,
@@ -33,4 +36,24 @@ body {
   vertical-align: middle;
   position: relative;
   text-align: left;
+}
+
+/* 排课日历样式优化 */
+.fc {
+  --fc-border-color: #e4e7ed;
+  --fc-page-bg-color: #f5f7fa;
+}
+.fc .fc-toolbar-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+.fc .fc-button-primary {
+  background-color: #409eff;
+  border-color: #409eff;
+}
+.fc .fc-daygrid-event,
+.fc .fc-timegrid-event {
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 1px 3px;
 }

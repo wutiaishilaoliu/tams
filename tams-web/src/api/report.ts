@@ -15,3 +15,11 @@ export const getReportCourseCount = (params: any) => {
         params
     })
 }
+
+export const getReportClassroomUsage = (params: any) => {
+    return axios({
+        url: 'report/classroom/usage',
+        method: 'get',
+        params
+    })
+}

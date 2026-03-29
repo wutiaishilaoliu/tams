@@ -4,6 +4,20 @@ import Main from '@/views/Main.vue'
 
 const routes: RouteRecordRaw[] = [
     {
+        path: '/login',
+        component: () => import('@/views/Login.vue')
+    },
+    {
+        path: '/teacher',
+        component: () => import('@/views/teacher/TeacherHome.vue'),
+        meta: { requiresAuth: true, userType: 'teacher' }
+    },
+    {
+        path: '/student',
+        component: () => import('@/views/student/StudentHome.vue'),
+        meta: { requiresAuth: true, userType: 'student' }
+    },
+    {
         path: '/',
         redirect: '/course-scheduling',
         component: Main,
@@ -25,8 +39,12 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/course/Course.vue')
             },
             {
-                path: '/teacher',
+                path: '/teacher-manage',
                 component: () => import('@/views/teacher/Teacher.vue')
+            },
+            {
+                path: '/student-manage',
+                component: () => import('@/views/student/Student.vue')
             },
             {
                 path: '/report',
@@ -39,6 +57,30 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
     history: createWebHashHistory(),
     routes
+})
+
+// 路由守卫
+router.beforeEach((to, from, next) => {
+    const token = localStorage.getItem('token')
+    const userInfoStr = localStorage.getItem('userInfo')
+    
+    if (to.meta.requiresAuth) {
+        if (!token) {
+            next('/login')
+            return
+        }
+        
+        if (to.meta.userType && userInfoStr) {
+            const userInfo = JSON.parse(userInfoStr)
+            if (userInfo.userType !== to.meta.userType) {
+                // 用户类型不匹配，跳转到正确的页面
+                next(userInfo.userType === 'teacher' ? '/teacher' : '/student')
+                return
+            }
+        }
+    }
+    
+    next()
 })
 
 export default router

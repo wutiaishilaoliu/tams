@@ -16,6 +16,12 @@ public class TeacherListVO {
     @Schema(description = "姓名")
     private String name;
 
+    @Schema(description = "登录账号")
+    private String username;
+
+    @Schema(description = "登录密码")
+    private String password;
+
     @Schema(description = "停启用状态")
     private Integer enableState;
 }

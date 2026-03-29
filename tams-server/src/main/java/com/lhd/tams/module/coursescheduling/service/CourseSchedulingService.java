@@ -1,11 +1,15 @@
 package com.lhd.tams.module.coursescheduling.service;
 
+import com.lhd.tams.module.coursescheduling.model.dto.AutoScheduleDTO;
 import com.lhd.tams.module.coursescheduling.model.dto.CourseSchedulingBatchSaveDTO;
 import com.lhd.tams.module.coursescheduling.model.dto.CourseSchedulingQuery;
 import com.lhd.tams.module.coursescheduling.model.dto.CourseSchedulingSaveDTO;
 import com.lhd.tams.module.coursescheduling.model.dto.CourseSchedulingTimeUpdateDTO;
+import com.lhd.tams.module.coursescheduling.model.vo.ClassroomUsageReportVO;
 import com.lhd.tams.module.coursescheduling.model.vo.CourseSchedulingListVO;
 import com.lhd.tams.module.coursescheduling.model.vo.CourseSchedulingReportVO;
+import com.lhd.tams.module.coursescheduling.model.vo.StudentScheduleVO;
+import com.lhd.tams.module.coursescheduling.model.vo.TeacherScheduleVO;
 
 import java.util.List;
 import java.util.Map;
@@ -53,6 +57,14 @@ public interface CourseSchedulingService {
     List<CourseSchedulingReportVO> getReportCourseCount(String startDate, String endDate);
 
     /**
+     * 教室使用情况
+     * @param startDate
+     * @param endDate
+     * @return
+     */
+    List<ClassroomUsageReportVO> getReportClassroomUsage(String startDate, String endDate);
+
+    /**
      * 新增
      * @param saveDTO
      * @return
@@ -93,4 +105,29 @@ public interface CourseSchedulingService {
      * @param idList
      */
     void removeCourseSchedulingByIdList(List<Long> idList);
+
+    /**
+     * 自动排课（贪心算法）
+     * @param dto
+     * @return
+     */
+    boolean autoSchedule(AutoScheduleDTO dto);
+
+    /**
+     * 获取教师课表
+     * @param teacherId
+     * @param startDate
+     * @param endDate
+     * @return
+     */
+    List<TeacherScheduleVO> getTeacherSchedule(Long teacherId, String startDate, String endDate);
+
+    /**
+     * 获取学生课表
+     * @param classId
+     * @param startDate
+     * @param endDate
+     * @return
+     */
+    List<StudentScheduleVO> getStudentSchedule(Long classId, String startDate, String endDate);
 }

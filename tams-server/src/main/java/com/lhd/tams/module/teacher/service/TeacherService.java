@@ -54,4 +54,11 @@ public interface TeacherService {
      * @return
      */
     boolean updateTeacherEnableStateById(Long id, Integer enableState);
+
+    /**
+     * 根据用户名查询
+     * @param username
+     * @return
+     */
+    TeacherListVO getTeacherByUsername(String username);
 }

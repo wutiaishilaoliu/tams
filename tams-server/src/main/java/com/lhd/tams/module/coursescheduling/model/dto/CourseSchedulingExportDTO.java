@@ -31,6 +31,12 @@ public class CourseSchedulingExportDTO {
     @Schema(description = "指定教室id")
     private Long classroomId;
 
+    @Schema(description = "指定教师id")
+    private Long teacherId;
+
+    @Schema(description = "指定班级id")
+    private Long classId;
+
     @Schema(description = "指定教室名称")
     private String classroomName;
 

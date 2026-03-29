@@ -2,7 +2,13 @@
   <el-dialog title="新增" width="400px" :close-on-click-modal="false" :close-on-press-escape="false" v-model="dialogVisible" :before-close="handleClose">
     <el-form ref="formRef" :model="form" :rules="rules" label-width="80px" class="tams-form-container">
       <el-form-item label="姓名" prop="name">
-        <el-input v-model="form.name" class="tams-form-item" />
+        <el-input v-model="form.name" class="tams-form-item" placeholder="请输入姓名" />
+      </el-form-item>
+      <el-form-item label="登录账号" prop="username">
+        <el-input v-model="form.username" class="tams-form-item" placeholder="请输入登录账号" />
+      </el-form-item>
+      <el-form-item label="登录密码" prop="password">
+        <el-input v-model="form.password" class="tams-form-item" type="password" placeholder="不填则默认为123456" show-password />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -27,7 +33,10 @@ const dialogVisible = ref(false)
 const formRef = ref<FormInstance>()
 const form = ref<any>({})
 const submitBtnLoading = ref(false)
-const rules: FormRules = { name: [{ required: true, message: '姓名不能为空', trigger: 'blur' }] }
+const rules: FormRules = {
+  name: [{ required: true, message: '姓名不能为空', trigger: 'blur' }],
+  username: [{ required: true, message: '登录账号不能为空', trigger: 'blur' }]
+}
 
 const resetData = () => { formRef.value?.resetFields(); form.value = {} }
 const handleClose = (done: () => void) => { resetData(); emit('on-close'); done() }

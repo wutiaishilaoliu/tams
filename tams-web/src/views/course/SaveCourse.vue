@@ -9,8 +9,8 @@
       </el-form-item>
       <el-form-item label="背景颜色" prop="backgroundColor">
         <el-select v-model="form.backgroundColor" class="tams-form-item">
-          <el-option v-for="item in colorData" :key="item.color" :label="item.name" :value="item.color">
-            <span :style="{ float: 'left', backgroundColor: item.color, width: '20px', height: '20px', borderRadius: '3px', marginRight: '8px', verticalAlign: 'middle' }" />
+          <el-option v-for="item in colorData" :key="item.value" :label="item.name" :value="item.value">
+            <span :style="{ float: 'left', backgroundColor: item.value, width: '20px', height: '20px', borderRadius: '3px', marginRight: '8px', verticalAlign: 'middle' }" />
             <span>{{ item.name }}</span>
           </el-option>
         </el-select>

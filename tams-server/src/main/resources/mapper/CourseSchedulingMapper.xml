@@ -42,16 +42,24 @@
     </select>
 
     <select id="selectTimePeriodByDateRange" resultType="string">
-        select concat(date_format(attend_time, '%H:%i'), '-', date_format(finish_time, '%H:%i')) time
-        from t_course_scheduling
+        select distinct concat(date_format(cs.attend_time, '%H:%i'), '-', date_format(cs.finish_time, '%H:%i')) time
+        from t_course_scheduling cs
+        <if test="classId != null">
+            inner join t_course_scheduling_class csc on cs.id = csc.course_scheduling_id
+        </if>
         where date in
         <foreach item="item" collection="dateList" separator="," open="(" close=")">
             #{item}
         </foreach>
         <if test="classroomId != null">
-            and classroom_id = #{classroomId}
+            and cs.classroom_id = #{classroomId}
         </if>
-        group by time
+        <if test="teacherId != null">
+            and cs.teacher_id = #{teacherId}
+        </if>
+        <if test="classId != null">
+            and csc.class_id = #{classId}
+        </if>
         order by time
     </select>
 
@@ -62,12 +70,21 @@
                course.name courseName, course.background_color backgroundColor,
                teacher.name teacherName
         from t_course_scheduling cs
+        <if test="classId != null">
+                 inner join t_course_scheduling_class csc on cs.id = csc.course_scheduling_id
+        </if>
                  left join t_classroom classroom on cs.classroom_id = classroom.id
                  left join t_course course on cs.course_id = course.id
                  left join t_teacher teacher on cs.teacher_id = teacher.id
         where date between #{startDate} and #{endDate}
         <if test="classroomId != null">
             and cs.classroom_id = #{classroomId}
+        </if>
+        <if test="teacherId != null">
+            and cs.teacher_id = #{teacherId}
+        </if>
+        <if test="classId != null">
+            and csc.class_id = #{classId}
         </if>
         order by date, time
     </select>
@@ -88,6 +105,36 @@
             and cs.date between #{startDate} and #{endDate}
         group by course.id, course.name
         order by count desc;
+    </select>
+
+    <select id="selectReportClassroomUsage" resultType="com.lhd.tams.module.coursescheduling.model.vo.ClassroomUsageReportVO">
+        select classroom.id       as id,
+               classroom.name     as name,
+               count(distinct cs.date) as occupiedDays
+        from t_classroom classroom
+                 left join t_course_scheduling cs
+                           on classroom.id = cs.classroom_id
+                               and cs.date between #{startDate} and #{endDate}
+        group by classroom.id, classroom.name
+        order by occupiedDays desc;
+    </select>
+
+    <select id="selectCourseSchedulingListByClassId" resultType="CourseSchedulingListVO">
+        select
+        <include refid="column"></include>
+        from t_course_scheduling cs
+        inner join t_course_scheduling_class csc on cs.id = csc.course_scheduling_id
+        left join t_classroom classroom on cs.classroom_id = classroom.id
+        left join t_course course on cs.course_id = course.id
+        left join t_teacher teacher on cs.teacher_id = teacher.id
+        where csc.class_id = #{classId}
+        <if test="startDate != null and startDate != ''">
+            <![CDATA[and cs.date >= #{startDate}]]>
+        </if>
+        <if test="endDate != null and endDate != ''">
+            <![CDATA[and cs.date <= #{endDate}]]>
+        </if>
+        order by cs.date, cs.attend_time
     </select>
 
 </mapper>

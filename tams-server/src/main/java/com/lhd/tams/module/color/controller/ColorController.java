@@ -2,6 +2,7 @@ package com.lhd.tams.module.color.controller;
 
 import com.lhd.tams.common.base.BaseController;
 import com.lhd.tams.common.model.ApiResult;
+import com.lhd.tams.module.color.model.vo.ColorListVO;
 import com.lhd.tams.module.color.service.ColorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +27,7 @@ public class ColorController extends BaseController {
 
     @Operation(summary = "有效颜色列表")
     @GetMapping("list/effective")
-    public ResponseEntity<ApiResult<List<String>>> getEffectiveList() {
+    public ResponseEntity<ApiResult<List<ColorListVO>>> getEffectiveList() {
 
         return success(colorService.getEffectiveList());
     }

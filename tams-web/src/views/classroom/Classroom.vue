@@ -21,7 +21,21 @@
       <el-table stripe border :data="data.records">
         <el-table-column type="index" label="序号" width="50" />
         <el-table-column prop="name" label="名称" />
-        <el-table-column fixed="right" label="操作" width="130">
+        <el-table-column prop="type" label="类型" width="120">
+          <template #default="scope">
+            <el-tag v-if="scope.row.type === 1" type="info">普通教室</el-tag>
+            <el-tag v-else-if="scope.row.type === 2" type="success">多媒体教室</el-tag>
+            <el-tag v-else-if="scope.row.type === 3" type="warning">实验室</el-tag>
+            <el-tag v-else-if="scope.row.type === 4" type="danger">操场</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="capacity" label="容量" width="80">
+          <template #default="scope">
+            {{ scope.row.capacity }}人
+          </template>
+        </el-table-column>
+        <el-table-column prop="availableTime" label="可用时间段" width="200" />
+        <el-table-column fixed="right" label="操作" width="180">
           <template #default="scope">
             <el-button type="primary" size="small" @click="showUpdate(scope.row.id)">编辑</el-button>
             <el-switch

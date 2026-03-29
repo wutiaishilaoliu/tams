@@ -30,8 +30,9 @@ const navData = reactive<NavItem[]>([
   { code: '02', path: '/course-scheduling-list', name: '排课列表' },
   { code: '03', path: '/classroom', name: '教室' },
   { code: '04', path: '/course', name: '课程' },
-  { code: '05', path: '/teacher', name: '老师' },
-  { code: '06', path: '/report', name: '报表' }
+  { code: '05', path: '/teacher-manage', name: '老师' },
+  { code: '06', path: '/student-manage', name: '学生' },
+  { code: '07', path: '/report', name: '报表' }
 ])
 
 const handleSelect = (_key: string, _keyPath: string[]) => {

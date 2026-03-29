@@ -12,5 +12,10 @@ export const useReportStore = defineStore('report', () => {
         return res.data
     }
 
-    return { getReportTeacherCount, getReportCourseCount }
+    const getReportClassroomUsage = async (params: any) => {
+        const res: any = await Api.getReportClassroomUsage(params)
+        return res.data
+    }
+
+    return { getReportTeacherCount, getReportCourseCount, getReportClassroomUsage }
 })
